@@ -1,0 +1,975 @@
+/////////////1
+
+ 
+
+******Table creation*****
+
+ 
+
+create table client(
+
+    clno char(3),
+
+    name varchar(12),
+
+    address varchar(30),
+
+    constraint client_PK PRIMARY KEY(clno)
+
+)
+
+/
+
+ 
+
+create table stock(
+
+    company char(7),
+
+    price number(6,2),
+
+    dividend number(4,2),
+
+    eps number(4,2),
+
+    constraint stock_PK PRIMARY KEY(company)
+
+)
+
+/
+
+ 
+
+create table trading(
+
+    company char(7),
+
+    exchange varchar(12),
+
+    constraint trading_PK PRIMARY KEY(company,exchange),
+
+    constraint trading_FK1 FOREIGN KEY(company) REFERENCES stock 
+
+)
+
+/
+
+ 
+
+create table purchase(
+
+    clno char(3),
+
+    company char(7),
+
+    pdate date,
+
+    qty number(6),
+
+    price number(6,2),
+
+    constraint purchase_PK PRIMARY KEY(clno,company,pdate),
+
+    constraint purchase_FK2 FOREIGN KEY(clno) REFERENCES client,
+
+    constraint purchase_FK3 FOREIGN KEY(company) REFERENCES stock
+
+)
+
+/
+
+ 
+
+ 
+
+******Insert Data*********
+
+ 
+
+client table
+
+ 
+
+INSERT INTO client VALUES('100','John Smith', '3 East Av Bentley WA 6102')
+
+/
+
+INSERT INTO client VALUES('101','Jill Brody', '42 Bent St Perth WA 6001')
+
+/
+
+ 
+
+ 
+
+stock table
+
+ 
+
+INSERT INTO stock VALUES('BHP',10.50,1.50,3.20);
+
+INSERT INTO stock VALUES('IBM',70.00,4.25,10.00);
+
+INSERT INTO stock VALUES('INTEL',76.50,5.00,12.40);
+
+INSERT INTO stock VALUES('FORD',40.00,2.00,8.50);
+
+INSERT INTO stock VALUES('GM',60.00,2.50,9.20);
+
+INSERT INTO stock VALUES('INFOSYS',45.00,3.00,7.80);
+
+ 
+
+trading table
+
+ 
+
+INSERT INTO trading VALUES('BHP','Sydney');
+
+INSERT INTO trading VALUES('BHP','New York');
+
+INSERT INTO trading VALUES('IBM','New York');
+
+INSERT INTO trading VALUES('IBM','London');
+
+INSERT INTO trading VALUES('IBM','Tokyo');
+
+INSERT INTO trading VALUES('INTEL','New York');
+
+INSERT INTO trading VALUES('INTEL','London');
+
+ 
+
+purchase table
+
+ 
+
+INSERT INTO purchase VALUES('100','BHP','02-OCT-2001',1000,12.00);
+
+INSERT INTO purchase VALUES('100','BHP','08-JUN-2002',2000,10.50);
+
+INSERT INTO purchase VALUES('100','IBM','12-FEB-2000',3000,11.00);
+
+INSERT INTO purchase VALUES('100','IBM','09-SEP-2004',4000,9.50);
+
+ 
+
+ 
+
+Question 3
+
+ 
+
+a)
+
+select distinct c.name,p.company,s.price,s.dividend,s.eps
+
+from client c, purchase p, stock s
+
+where c.clno = p.clno and s.company = p.company;
+
+ 
+
+b)
+
+select c.name, p.company, sum(p.qty) total_qty, sum(p.qty*p.price)/sum(p.qty) APP
+
+from client c, purchase p
+
+where c.clno = p.clno
+
+group by c.name, p.company;
+
+ 
+
+c)
+
+select p.company, c.name, sum(p.qty), sum(p.qty*s.price) current_value
+
+from client c, purchase p, stock s, trading t
+
+where c.clno = p.clno and p.company = s.company and s.company = t.company and t.exchange = 'New York'
+
+group by p.company, c.name;
+
+ 
+
+d)
+
+select c.name, sum(p.qty*p.price) total_pprice
+
+from client c, purchase p
+
+where c.clno = p.clno 
+
+group by c.name;
+
+ 
+
+e)
+
+select c.name, sum(p.qty*(s.price-p.price)) book_profit
+
+from client c, purchase p, stock s
+
+where c.clno = p.clno and p.company = s.company
+
+group by c.name;
+
+ 
+
+ 
+
+////////////////2
+
+ 
+
+ 
+
+create type dept_t 
+
+ 
+
+create type emp_t as object( 
+
+  empno char(6), 
+
+  firstname varchar(12), 
+
+  lastname varchar(15), 
+
+  workdept ref dept_t, 
+
+  sex char(1), 
+
+  birthdate date, 
+
+  salary NUMBER(8,2) 
+
+   
+
+) 
+
+ 
+
+ 
+
+CREATE type dept_t as object( 
+
+  deptno char(3), 
+
+  deptname varchar(36), 
+
+  mgrno ref emp_t, 
+
+  admrdept ref dept_t 
+
+) 
+
+ 
+
+ 
+
+create table oremp of emp_t( 
+
+   PRIMARY KEY(empno) 
+
+) 
+
+ 
+
+create table ordept of dept_t( 
+
+   primary key(deptno), 
+
+  constraint fk_mgr foreign key(mgrno) references oremp, 
+
+  constraint fk_admdept foreign key(admrdept) references ordept 
+
+) 
+
+ 
+
+alter table oremp 
+
+add constraint fk_workdept foreign key(workdept)references ordept
+
+ 
+
+insert into oremp values(emp_t('0001','chistine','haas',null,'F','14-aug-1953', 72750))
+
+ 
+
+insert into ordept values(dept_t('A00','spiffy computer services div',(select ref(e) from oremp e where e.empno= '0001'), null ))
+
+ 
+
+insert into oremp values(emp_t('0002','michael','thompson',null,'M','02-feb-1968', 61250)) 
+
+ 
+
+insert into oremp values(emp_t('0003','sally','kwan',null,'F','14-aug-1953', 72750)) 
+
+ 
+
+insert into oremp values(emp_t('0005','john','geyer',null,'M','15-sep-1955', 60175)) 
+
+ 
+
+insert into oremp values(emp_t('0006','irving','stern',null,'M','07-jul-1965', 55555)) 
+
+ 
+
+insert into oremp values(emp_t('0007','eva','pulaski',null,'F','26-may-1973', 56170)) 
+
+ 
+
+insert into oremp values(emp_t('0009','elileen','henderson',null,'F','15-may-1961', 49750)) 
+
+ 
+
+insert into oremp values(emp_t('0010','theodore','spenser',null,'M','18-dec-1976', 46150))
+
+ 
+
+insert into ordept values(dept_t('B01','planning',(select ref(e) from oremp e where e.empno= '0002'), (select ref(d) from ordept d where  d.deptno ='A00') )) 
+
+ 
+
+insert into ordept values(dept_t('C01','information centre',(select ref(e) from oremp e where e.empno= '0003'), (select ref(d) from ordept d where d.deptno ='A00') )) 
+
+ 
+
+insert into ordept values(dept_t('D01','development centre ',(select ref(e) from oremp e where e.empno= '0006'),(select ref(d) from ordept d where d.deptno = 'C01'))) 
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='A00') 
+
+where empno ='0001'
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='B01') 
+
+where empno ='0002'
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='D01') 
+
+where empno ='0006'
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='C01') 
+
+where empno ='0003'
+
+ 
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='D01') 
+
+where empno ='0007'
+
+ 
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='C01') 
+
+where empno ='0005'
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='B01') 
+
+where empno ='0009'
+
+ 
+
+update oremp 
+
+set workdept =(select ref(d) from ordept d where d.deptno ='B01') 
+
+where empno ='0010'
+
+ 
+
+select d.deptname , d.mgrno.lastname 
+
+from ordept d
+
+ 
+
+-2) a)
+
+SELECT D.DEPTNAME, D.MGRNO.LASTNAME
+
+FROM ORDEPT D;
+
+ 
+
+ b)
+
+SELECT E.EMPNO, E.LASTNAME, E.WORKDEPT.DEPTNAME
+
+FROM OREMP E;
+
+ 
+
+ c)
+
+SELECT D.DEPTNO, D.DEPTNAME, D.ADMRDEPT.DEPTNAME
+
+FROM ORDEPT D;
+
+ 
+
+ d)
+
+SELECT E.EMPNO, E.FIRSTNAME,E.LASTNAME, E.SALARY, E.WORKDEPT.MGRNO.LASTNAME,E.WORKDEPT.MGRNO.SALARY
+
+FROM OREMP E;
+
+ 
+
+) e)
+
+SELECT E.WORKDEPT.DEPTNO,E.WORKDEPT.DEPTNAME, E.SEX, AVG(E.SALARY)
+
+FROM OREMP E 
+
+GROUP BY E.WORKDEPT.DEPTNO,E.WORKDEPT.DEPTNAME,E.SEX;
+
+ 
+
+//////////////////////3
+
+ 
+
+create type address_t as object(
+
+sno char(10),
+
+sname char(15),
+
+suburb char(20),
+
+ste char(15),
+
+pin char(10)
+
+)
+
+/
+
+ 
+
+create type excharray as varray(10) of varchar2(20)
+
+/
+
+ 
+
+create type stock_t as object(
+
+company char(7),
+
+currentPrice number(6,2),
+
+exchanges excharray,
+
+lastDividend number(4,2),
+
+eps number(6,2)
+
+)
+
+/
+
+ 
+
+create table Stocks of stock_t(
+
+constraint stock_PK primary key(company)
+
+)
+
+/
+
+ 
+
+create type investment_t as object(
+
+company ref stock_t,
+
+purchasePrice number(6,2),
+
+investDate date,
+
+qty number(6)
+
+)
+
+/
+
+ 
+
+create type investmentTb_t as table of investment_t
+
+/
+
+ 
+
+create type client_t as object(
+
+name varchar2(20),
+
+address address_t,
+
+investments investmentTb_t
+
+)
+
+/
+
+ 
+
+create table Clients of client_t(
+
+constraint clients_PK primary key(name)
+
+)
+
+nested table investments store as client_investment_table
+
+/
+
+ 
+
+insert into Stocks values(stock_t('BHP',10.50,excharray('Sydney','New York'),1.50,3.20));
+
+insert into Stocks values(stock_t('IBM',70.00,excharray('New York','London','Tokyo'),4.25,10.00));
+
+insert into Stocks values(stock_t('INTEL',76.50,excharray('New York','London'),5.00,12.40));
+
+insert into Stocks values(stock_t('FORD',40.00,excharray('New York'),2.00,8.50));
+
+insert into Stocks values(stock_t('GM',60.00,excharray('New York'),2.50,9.20));
+
+insert into Stocks values(stock_t('INFOSYS',45.00,excharray('New York'),3.00,7.80));
+
+ 
+
+insert into Clients values(client_t('John Smith',address_t('3','East','Av','Bentley','WA 6102'),
+
+investmentTb_t(investment_t((select ref(s) from Stocks s where s.company = 'BHP'),12.00,'02-OCT-2001',1000),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'BHP'),10.50,'08-JUN-2002',2000),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'IBM'),58.00,'12-FEB-2000',500),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'IBM'),65.00,'10-APR-2001',1200),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'INFOSYS'),64.00,'11-AUG-2001',1000)
+
+  ))
+
+);
+
+ 
+
+insert into Clients values(client_t('Jill Brody',address_t('42','Bent','St','Perth','WA 6001'),
+
+investmentTb_t(investment_t((select ref(s) from Stocks s where s.company = 'INTEL'),35.00,'03-JAN-2000',300),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'INTEL'),54.00,'30-JAN-2001',400),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'INTEL'),60.00,'02-OCT-2001',200),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'FORD'),40.00,'05-OCT-1999',300),
+
+   investment_t((select ref(s) from Stocks s where s.company = 'GM'),55.50,'12-DEC-2000',500)
+
+  ))
+
+);
+
+ 
+
+3)
+
+ 
+
+a) select distinct c.name,i.company.company,i.company.currentPrice,i.company.lastDividend,i.company.eps
+
+from Clients c, Table(c.investments) i
+
+order by c.name
+
+/
+
+ 
+
+b) select c.name,i.company.company,sum(i.qty) TotalShares,sum(i.purchasePrice*i.qty)/sum(i.qty) AveragePrice
+
+from Clients c, Table(c.investments) i
+
+group by c.name,i.company;
+
+/
+
+ 
+
+c) select c.name,i.company.company,sum(i.qty) Shares,sum(i.qty*i.company.currentPrice) CurrentValue 
+
+from Clients c, Table(c.investments)i
+
+group by c.name,i.company;
+
+/
+
+ 
+
+d) select c.name, sum(i.purchasePrice*i.qty) Total_Purchase
+
+from Clients c, Table(c.investments) i
+
+group by c.name
+
+/
+
+ 
+
+e) select c.name, sum((i.company.currentPrice-i.purchasePrice)*i.qty) Profit_or_Loss
+
+from Clients c, Table(c.investments)i
+
+group by c.name
+
+/
+
+ 
+
+4)
+
+insert into table(select c.investments
+
+  from Clients c
+
+  where c.name = 'Jill Brody')
+
+values(investment_t((select ref(s) from Stocks s where s.company = 'INFOSYS'),45.00,'08-MAR-2023',1000));
+
+ 
+
+delete from table(select c.investments
+
+  from Clients c
+
+  where c.name = 'John Smith') i
+
+where i.company.company = 'INFOSYS'
+
+/
+
+ 
+
+insert into table(select c.investments
+
+  from Clients c
+
+  where c.name = 'John Smith')
+
+values(investment_t((select ref(s) from Stocks s where s.company = 'GM'),60.00,'08-MAR-2023',500));
+
+/
+
+ 
+
+delete from table(select c.investments
+
+  from Clients c
+
+  where c.name = 'Jill Brody') i
+
+where i.company.company = 'GM'
+
+/
+
+///////////////////4
+
+1)
+
+a)
+
+ 
+
+alter type stock_t
+
+add member function yield
+
+return float
+
+cascade;
+
+ 
+
+create or replace type body stock_t as
+
+member function yield
+
+return float is
+
+begin
+
+return ((self.dividend/self.currentPrice)*100);
+
+end;
+
+end;
+
+/
+
+ 
+
+b)
+
+ 
+
+alter type stock_t
+
+add member function priceInUSD(rate float)
+
+return float
+
+cascade;
+
+ 
+
+create or replace type body stock_t as
+
+member function yield
+
+return float is
+
+    begin
+
+return ((self.dividend/self.currentPrice)*100);
+
+    end yield;
+
+member function priceInUSD(rate float)
+
+return float is
+
+    begin
+
+return self.currentPrice*rate;
+
+    end priceInUSD;
+
+end;
+
+/
+
+ 
+
+c)
+
+ 
+
+alter type stock_t
+
+add member function noOfExchanges
+
+return integer
+
+cascade;
+
+ 
+
+create or replace type body stock_t as
+
+member function noOfExchanges
+
+return integer is
+
+    eCount integer;
+
+    begin
+
+     select count(e.column_value) into eCount
+
+        from table(self.exchanges) e;
+
+return eCount;
+
+    end noOfExchanges;
+
+end;
+
+/
+
+ 
+
+d)
+
+ 
+
+alter type client_t
+
+add member function totPurchaseValue
+
+return float
+
+cascade;
+
+ 
+
+create or replace type body client_t as
+
+member function totPurchaseValue
+
+return float is
+
+    totValue float;
+
+    begin
+
+     select sum(i.purchasePrice*i.qty) into totValue
+
+        from table(self.Investments) i;
+
+return totValue;
+
+    end;
+
+end;
+
+/
+
+ 
+
+e)
+
+ 
+
+alter type investment_t
+
+add member function totalProfit
+
+return float
+
+cascade;
+
+ 
+
+create type body investment_t as
+
+member function totalProfit
+
+return float is
+
+begin
+
+return ((self.company.currentPrice-self.purchasePrice)*self.qty);
+
+ 
+
+end;
+
+end;
+
+/IT20652050
+
+ 
+
+ 
+
+2)
+
+a)
+
+ 
+
+select s.company,s.exchanges,s.yield(),s.priceInUSD(0.74)
+
+from Stocks s
+
+/
+
+ 
+
+ 
+
+b)
+
+ 
+
+select s.company,s.currentPrice,s.noOfExchanges()
+
+from Stocks s
+
+where s.noOfExchanges() > 1
+
+/
+
+ 
+
+ 
+
+c)
+
+ 
+
+select c.name,i.company.company,i.company.yield(),i.company.currentPrice,i.company.eps
+
+from Clients c, table(c.investments) i
+
+/
+
+ 
+
+ 
+
+d)
+
+ 
+
+select c.name,c.totPurchaseValue()
+
+from Clients c
+
+/
+
+ 
+
+ 
+
+e)
+
+ 
+
+select c.name,i.totalProfit()
+
+from Clients c, table(c.investments) i
+
+/
